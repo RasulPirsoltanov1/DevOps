@@ -1,0 +1,93 @@
+Kubernetes Dashboard, Kubernetes cluster'ınızı görsel olarak yönetmenize olanak tanıyan bir web tabanlı arayüzdür. Kubernetes Dashboard'u yüklemek ve çalıştırmak için aşağıdaki adımları izleyebilirsiniz:
+
+### Adım 1: Kubernetes Dashboard'u Yükleme
+Kubernetes Dashboard'u yüklemek için aşağıdaki komutu kullanın:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+```
+
+Bu komut, Kubernetes Dashboard bileşenlerini cluster'ınıza yükler.
+
+### Adım 2: Dashboard Servis Hesabı ve Rol Bağlantısını Oluşturma
+Dashboard'a erişim sağlamak için bir servis hesabı ve bu hesabın cluster admin rolüyle yetkilendirilmesi gereklidir. Bunun için bir YAML dosyası oluşturun ve aşağıdaki içeriği ekleyin:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+```
+
+Bu dosyayı `dashboard-admin.yaml` olarak kaydedin ve ardından aşağıdaki komutla uygulayın:
+
+```sh
+kubectl apply -f dashboard-admin.yaml
+```
+
+### Adım 3: Servis Hesabı Token'ını Alma
+Dashboard'a giriş yapmak için, az önce oluşturduğunuz servis hesabının token'ını almanız gerekiyor:
+
+```sh
+kubectl -n kubernetes-dashboard create token admin-user
+```
+
+Bu komut, `admin-user` servis hesabı için bir token oluşturur ve çıktısını verir. Bu token'ı, Dashboard'a giriş yapmak için kullanacaksınız.
+
+### Adım 4: Kubernetes Dashboard'a Erişim
+Kubernetes Dashboard'a erişmek için bir proxy başlatın:
+
+```sh
+kubectl proxy
+```
+
+Ardından web tarayıcınızda aşağıdaki URL'ye gidin:
+
+```
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+```
+
+Bu URL, Kubernetes Dashboard'unuza erişmenizi sağlar. Giriş ekranında, az önce aldığınız token'ı yapıştırın ve "Sign in" butonuna tıklayın.
+
+### Özet
+1. **Dashboard'u yükleyin**:
+    ```sh
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+    ```
+
+2. **Servis hesabı ve rol bağlantısı oluşturun**:
+    - `dashboard-admin.yaml` dosyasını oluşturun ve uygulayın:
+      ```sh
+      kubectl apply -f dashboard-admin.yaml
+      ```
+
+3. **Token alın**:
+    ```sh
+    kubectl -n kubernetes-dashboard create token admin-user
+    ```
+
+4. **Proxy başlatın**:
+    ```sh
+    kubectl proxy
+    ```
+
+5. **Web tarayıcınızda Dashboard'a erişin**:
+    ```
+    http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+    ```
+
+Bu adımları izleyerek Kubernetes Dashboard'u yükleyebilir ve kullanmaya başlayabilirsiniz.
